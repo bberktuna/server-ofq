@@ -1,11 +1,18 @@
-import { Post } from "./entities/Post";
 import { __prod__ } from "./constants";
 import { MikroORM } from "@mikro-orm/core"
 import path from "path"
 
+//entities
+import { User } from "./entities/User";
+import { Post } from "./entities/Post";
+
 
 export default {
-        entities: [Post], // database tables
+        entities: [
+            Post,
+            User,
+            
+            ], // database tables
         dbName: "serverOFQ",
         user: "postgres",
         password: "6244869asd",

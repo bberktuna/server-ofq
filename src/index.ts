@@ -9,6 +9,7 @@ import { buildSchema } from "type-graphql"
 
 import { HelloResolver } from "./resolvers/hello"
 import { PostResolver } from "./resolvers/post"
+import { UserResolver } from "./resolvers/user"
 
 
 const main = async () => {
@@ -24,7 +25,8 @@ const main = async () => {
         schema: await buildSchema({
             resolvers: [
                 HelloResolver,
-                PostResolver
+                PostResolver,
+                UserResolver
             ],
             validate: false,
         }), // awatinig it cause it returns promise
