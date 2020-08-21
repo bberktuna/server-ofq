@@ -1,21 +1,41 @@
 import { MikroORM } from "@mikro-orm/core"
 import { __prod__ } from "./constants"
+import microConfig from "./mikro-orm.config"
+import express from "express"
+import { ApolloServer } from "apollo-server-express"
+import { buildSchema } from "type-graphql"
+import { HelloResolver } from "./resolvers/hello"
+
 
 const main = async () => {
 
-    const orm = await MikroORM.init({
-        entities: [], // database tables
-        dbName: "serverOFQ",
-        user: "postgres",
-        password: "6244869asd",
-        debug: !__prod__,
-        type: "postgresql"
+    const orm = await MikroORM.init(microConfig)
+    orm.getMigrator().up()
+
+
+
+
+    const app = express()
+    const apolloServer = new ApolloServer({
+        schema: await buildSchema({
+            resolvers: [
+                HelloResolver
+            ],
+            validate: false,
+
+        }) // awatinig it cause it returns promise
+    })
+    apolloServer.applyMiddleware({app})
+
+
+    
+
+    app.listen(4000, () => {
+        console.log("server started on localhost 4000000")
     })
 
 }
 
-main()
-
-
-
-console.log("hello worldd")
+main().catch((err) => {
+    console.log(err)
+})
