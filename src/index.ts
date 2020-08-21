@@ -5,11 +5,15 @@ import microConfig from "./mikro-orm.config"
 import express from "express"
 import { ApolloServer } from "apollo-server-express"
 import { buildSchema } from "type-graphql"
-
+import redis from "redis"
+import session from "express-session"
+import connectRedis from "connect-redis"
 
 import { HelloResolver } from "./resolvers/hello"
 import { PostResolver } from "./resolvers/post"
 import { UserResolver } from "./resolvers/user"
+import { MyContext } from "./types"
+
 
 
 const main = async () => {
@@ -21,6 +25,30 @@ const main = async () => {
 
 
     const app = express()
+
+    const RedisStore = connectRedis(session)
+    const redisClient = redis.createClient()
+
+    app.use(
+        session({
+            name: "qid", // random cookie name
+            store: new RedisStore({
+                client: redisClient,
+                disableTouch: true,
+            }),
+            secret: "randomstring",
+            resave: false,
+            saveUninitialized: false,
+            cookie: {
+                maxAge: 1000 * 60 * 60 * 24 * 365 * 10, //10 years
+                httpOnly: true, // you cant reach your cookie in the frontend
+                secure: __prod__,// cookie only works in https
+                //LLOK THIS UP MIGHT NEED TO SET IT FALSE
+                sameSite: "lax"
+            }
+        })
+    )
+
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
             resolvers: [
@@ -30,7 +58,7 @@ const main = async () => {
             ],
             validate: false,
         }), // awatinig it cause it returns promise
-        context: ({req, res}) => ({ em: orm.em})
+        context: ({req, res}): MyContext => ({ em: orm.em, req, res})
     })
     apolloServer.applyMiddleware({app})
 
