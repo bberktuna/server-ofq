@@ -1,6 +1,6 @@
 import "reflect-metadata"
 import { MikroORM } from "@mikro-orm/core"
-import { __prod__ } from "./constants"
+import { __prod__, COOKIE_NAME } from "./constants"
 import microConfig from "./mikro-orm.config"
 import express from "express"
 import { ApolloServer } from "apollo-server-express"
@@ -8,11 +8,11 @@ import { buildSchema } from "type-graphql"
 import redis from "redis"
 import session from "express-session"
 import connectRedis from "connect-redis"
+import cors from "cors"
 
 import { HelloResolver } from "./resolvers/hello"
 import { PostResolver } from "./resolvers/post"
 import { UserResolver } from "./resolvers/user"
-import { MyContext } from "./types"
 
 
 
@@ -30,8 +30,14 @@ const main = async () => {
     const redisClient = redis.createClient()
 
     app.use(
+        cors({
+            origin: "http://localhost:19002",
+            credentials: true
+    }))
+
+    app.use(
         session({
-            name: "qid", // random cookie name
+            name: COOKIE_NAME, // random cookie name
             store: new RedisStore({
                 client: redisClient,
                 disableTouch: true,
@@ -58,9 +64,13 @@ const main = async () => {
             ],
             validate: false,
         }), // awatinig it cause it returns promise
-        context: ({req, res}): MyContext => ({ em: orm.em, req, res})
+        context: ({req, res}) => ({ em: orm.em, req, res})
     })
-    apolloServer.applyMiddleware({app})
+    apolloServer.applyMiddleware({
+        app, 
+        cors: false,
+
+    })
 
 
 
